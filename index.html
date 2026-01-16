@@ -11,14 +11,12 @@
     text-align: center;
   }
 
-  /* ★ ステータス（○ × △）をさらに大きく */
   #status {
     font-size: 140px;
     margin: 40px 0;
     font-weight: bold;
   }
 
-  /* ★ 所属・メッセージを大きく太く */
   #log {
     margin-top: 30px;
     font-size: 42px;
@@ -27,7 +25,7 @@
     line-height: 1.4;
   }
 
-  /* ★ 非会員メッセージ専用の強調デザイン */
+  /* 非会員の強調表示 */
   .non-member-warning {
     font-size: 60px;
     font-weight: 900;
@@ -39,28 +37,33 @@
     margin-top: 20px;
   }
 
-  /* ★ ボタンをさらに大きく */
+  /* 名簿にない場合の表示 */
+  .not-found {
+    font-size: 60px;
+    font-weight: 900;
+    color: #444;
+    padding: 20px;
+    display: inline-block;
+  }
+
   button {
     font-size: 44px;
     padding: 26px 45px;
     margin: 20px;
   }
 
-  /* ★ 入力欄も大きく */
   input {
     font-size: 44px;
     padding: 18px;
     width: 520px;
   }
 
-  /* タイトルも大きく */
   h1 {
     font-size: 70px;
     margin-bottom: 40px;
   }
 </style>
 
-<!-- ひらがな変換ライブラリ -->
 <script src="https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js"></script>
 <script src="https://unpkg.com/kuroshiro@1.1.0/dist/kuroshiro.min.js"></script>
 <script src="https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
@@ -91,10 +94,9 @@ window.addEventListener("load", async () => {
   kuroshiro = new Kuroshiro();
   await kuroshiro.init(new KuromojiAnalyzer({ dictPath: "dict/" }));
   kuroshiroReady = true;
-  console.log("Kuroshiro initialized");
 });
 
-// ====== 正規化（漢字 → ひらがな） ======
+// ====== 正規化 ======
 async function normalizeHiragana(str) {
   if (!str) return "";
 
@@ -148,15 +150,11 @@ async function searchName(name) {
     const res = await fetch(`${API_URL}?name=${encodeURIComponent(name)}`);
     const data = await res.json();
 
-    // ★ 非会員（該当者なし）
+    // ★ 名簿に存在しない
     if (!data.results || data.results.length === 0) {
       document.getElementById("status").textContent = "×";
-
       document.getElementById("log").innerHTML =
-        `<div class="non-member-warning">
-           非会員の方は受付前に<br>必ずお支払いが必要です
-         </div>`;
-
+        `<div class="not-found">名簿にお名前がありません</div>`;
       setTimeout(() => {}, 6000);
       return;
     }
@@ -170,12 +168,31 @@ async function searchName(name) {
 
     const person = data.results[0];
 
-    // ★ 会員（所属表示）
-    setStatus("○", `${person.name} さん（${person.company}）を受付します`);
+    // ====== 所属判定（E列） ======
+    const company = person.company ? person.company.trim() : "";
 
+    // ★ 非会員
+    if (company === "非会員（当日受付にて参加費をお支払いください）") {
+      document.getElementById("status").textContent = "×";
+      document.getElementById("log").innerHTML =
+        `<div class="non-member-warning">
+           受付にて参加費をお支払いください
+         </div>`;
+      setTimeout(() => {}, 6000);
+      return;
+    }
+
+    // ★ 会員（埼玉県自閉症協会会員）
+    if (company === "埼玉県自閉症協会会員") {
+      setStatus("○", `${person.name} さん（${company}）を受付します`);
+      setTimeout(() => {}, 6000);
+      await checkIn(person.id);
+      return;
+    }
+
+    // ★ 想定外の値（保険）
+    setStatus("×", "所属情報が不明です");
     setTimeout(() => {}, 6000);
-
-    await checkIn(person.id);
 
   } catch (e) {
     setStatus("×", "エラーが発生しました");
