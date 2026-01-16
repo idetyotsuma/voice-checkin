@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>音声受付システム（完全版）</title>
+<title>音声受付システム（完全安定版）</title>
 <style>
   body { font-family: sans-serif; margin: 40px; text-align: center; }
   #status { font-size: 80px; margin: 30px 0; }
@@ -34,12 +34,26 @@
 const API_URL = "YOUR_SCRIPT_URL";  // ← Apps Script の /exec URL を入れる
 
 // ====== Kuroshiro 初期化 ======
-let kuroshiro = new Kuroshiro();
-kuroshiro.init(new KuromojiAnalyzer());
+let kuroshiroReady = false;
+let kuroshiro;
+
+window.addEventListener("load", async () => {
+  kuroshiro = new Kuroshiro();
+  await kuroshiro.init(new KuromojiAnalyzer());
+  kuroshiroReady = true;
+  console.log("Kuroshiro initialized");
+});
 
 // ====== 正規化（漢字 → ひらがな対応） ======
 async function normalizeHiragana(str) {
   if (!str) return "";
+
+  // 初期化待ち（最大 2 秒）
+  let waitCount = 0;
+  while (!kuroshiroReady && waitCount < 20) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    waitCount++;
+  }
 
   // 敬称・語尾削除
   str = str.replace(/です|さん|様/g, "");
