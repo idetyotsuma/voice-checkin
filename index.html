@@ -25,7 +25,6 @@
     line-height: 1.4;
   }
 
-  /* 非会員の強調表示 */
   .non-member-warning {
     font-size: 60px;
     font-weight: 900;
@@ -37,7 +36,6 @@
     margin-top: 20px;
   }
 
-  /* 名簿にない場合の表示 */
   .not-found {
     font-size: 60px;
     font-weight: 900;
@@ -169,11 +167,11 @@ async function searchName(name) {
 
     const person = data.results[0];
 
-    // ====== 所属判定（E列） ======
+    // ====== 所属判定（完全一致） ======
     const company = (person.company || "").trim();
 
-    // ★ ① 会員（先に判定する）
-    if (company.includes("埼玉県自閉症協会会員")) {
+    // ★ 会員（完全一致）
+    if (company === "埼玉県自閉症協会会員") {
       setStatus("○", `${person.name} さん（${company}）を受付します`);
       setTimeout(() => {}, 6000);
       await checkIn(person.id);
@@ -181,11 +179,11 @@ async function searchName(name) {
       return;
     }
 
-    // ★ ② 非会員（次に判定）
-    else if (company.includes("非会員")) {
+    // ★ 非会員（完全一致）
+    if (company === "非会員（当日受付にて参加費をお支払いください）") {
       document.getElementById("status").textContent = "×";
       document.getElementById("log").innerHTML =
-    `    <div class="non-member-warning">
+        `<div class="non-member-warning">
            受付にて参加費をお支払いください
          </div>`;
       setTimeout(() => {}, 6000);
@@ -193,7 +191,7 @@ async function searchName(name) {
       return;
     }
 
-    // ★ 想定外の値（保険）
+    // ★ 想定外
     setStatus("×", "所属情報が不明です");
     setTimeout(() => {}, 6000);
     document.getElementById("nameInput").value = "";
@@ -231,6 +229,3 @@ function log(message) {
 
 </body>
 </html>
-
-
-
