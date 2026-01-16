@@ -179,6 +179,7 @@ async function searchName(name) {
            受付にて参加費をお支払いください
          </div>`;
       setTimeout(() => {}, 6000);
+      document.getElementById("nameInput").value = "";
       return;
     }
 
@@ -187,16 +188,19 @@ async function searchName(name) {
       setStatus("○", `${person.name} さん（${company}）を受付します`);
       setTimeout(() => {}, 6000);
       await checkIn(person.id);
+      document.getElementById("nameInput").value = "";
       return;
     }
 
     // ★ 想定外の値（保険）
     setStatus("×", "所属情報が不明です");
     setTimeout(() => {}, 6000);
+    document.getElementById("nameInput").value = "";
 
   } catch (e) {
     setStatus("×", "エラーが発生しました");
     setTimeout(() => {}, 6000);
+    document.getElementById("nameInput").value = "";
   }
 }
 
@@ -226,3 +230,4 @@ function log(message) {
 
 </body>
 </html>
+
