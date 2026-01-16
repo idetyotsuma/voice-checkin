@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>音声受付システム（D列ひらがな対応）</title>
+<style>
+  body { font-family: sans-serif; margin: 40px; text-align: center; }
+  #status { font-size: 80px; margin: 30px 0; }
+  #log { margin-top: 20px; font-size: 18px; color: #444; }
+  button { font-size: 20px; padding: 10px 20px; margin: 10px; }
+  input { font-size: 20px; padding: 8px; width: 300px; }
+</style>
+</head>
+<body>
+
+<h1>音声受付システム</h1>
+
+<div>
+  <input id="nameInput" type="text" placeholder="名前を入力または音声入力">
+  <button id="micBtn">🎤 音声入力</button>
+  <button id="searchBtn">検索</button>
+</div>
+
+<div id="status"></div>
+<div id="log"></div>
+
+<script>
+// ====== 設定 ======
+const API_URL = "https://script.google.com/macros/s/AKfycbxu4nEhw2QDiUMCGfFL53iNubqVEhAWDihsYZdFeI7kJyaibmNpHsce9g-MiSSDyMb21g/exec";  // ←差し替え必須
+
+// ====== カタカナ→ひらがな変換 ======
+function toHiragana(str) {
+  return str.replace(/[\u30a1-\u30f6]/g, m =>
+    String.fromCharCode(m.charCodeAt(0) - 0x60)
+  );
+}
+
+// ====== 音声入力の正規化 ======
+function normalizeHiragana(str) {
+  if (!str) return "";
+
+  str = toHiragana(str);          // カタカナ→ひらがな
+  str = str.replace(/さん|様/g, ""); // 敬称削除
+  str = str.replace(/[\s　]+/g, ""); // 全角・半角スペース削除
+  str = str.replace(/[。、・]/g, ""); // 記号削除
+
+  return str.trim();
+}
+
+// ====== 音声入力 ======
+document.getElementById("micBtn").onclick = () => {
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = "ja-JP";
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    let text = event.results[0][0].transcript;
+    text = normalizeHiragana(text);
+    document.getElementById("nameInput").value = text;
+    searchName(text);
+  };
+};
+
+// ====== 検索ボタン ======
+document.getElementById("searchBtn").onclick = () => {
+  const name = normalizeHiragana(document.getElementById("nameInput").value);
+  searchName(name);
+};
+
+// ====== 名前検索 ======
+async function searchName(name) {
+  if (!name) return;
+
+  setStatus("⏳", "検索中…");
+
+  try {
+    const res = await fetch(`${API_URL}?name=${encodeURIComponent(name)}`);
+    const data = await res.json();
+
+    if (!data.results || data.results.length === 0) {
+      setStatus("×", "該当者が見つかりません");
+      return;
+    }
+
+    if (data.results.length > 1) {
+      setStatus("△", `候補が複数あります（${data.results.length}件）`);
+      return;
+    }
+
+    const person = data.results[0];
+
+    // ★ 所属を含めて表示
+    setStatus("○", `${person.name} さん（${person.company}）を受付します`);
+
+    await checkIn(person.id);
+
+  } catch (e) {
+    setStatus("×", "エラーが発生しました");
+  }
+}
+
+// ====== 受付済み更新 ======
+async function checkIn(id) {
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      body: new URLSearchParams({ id })
+    });
+    log(`受付済みに更新しました（ID: ${id}）`);
+  } catch (e) {
+    log("受付済み更新に失敗しました");
+  }
+}
+
+// ====== UI ======
+function setStatus(symbol, message) {
+  document.getElementById("status").textContent = symbol;
+  document.getElementById("log").textContent = message;
+}
+
+function log(message) {
+  document.getElementById("log").textContent = message;
+}
+</script>
+
+</body>
+</html>
