@@ -3,27 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <title>音声受付システム（完全安定版）</title>
+
 <style>
   body { font-family: sans-serif; margin: 40px; text-align: center; }
-  #status { font-size: 80px; margin: 30px 0; }
-  #log { margin-top: 20px; font-size: 18px; color: #444; }
-  button { font-size: 20px; padding: 10px 20px; margin: 10px; }
-  input { font-size: 20px; padding: 8px; width: 300px; }
+
+  /* ★ 表示を大きくして視認性アップ */
+  #status { font-size: 100px; margin: 40px 0; }
+  #log { margin-top: 25px; font-size: 28px; color: #333; }
+
+  button {
+    font-size: 32px;
+    padding: 18px 30px;
+    margin: 15px;
+  }
+
+  input {
+    font-size: 32px;
+    padding: 12px;
+    width: 420px;
+  }
 </style>
 
-<!-- ★ 漢字 → ひらがな変換ライブラリ -->
-<!-- kuromoji.js（形態素解析器） -->
+<!-- ひらがな変換ライブラリ -->
 <script src="https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js"></script>
-
-<!-- Kuroshiro 本体 -->
 <script src="https://unpkg.com/kuroshiro@1.1.0/dist/kuroshiro.min.js"></script>
-
-<!-- Kuroshiro 用の Kuromoji アナライザ -->
 <script src="https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 </head>
+
 <body>
 
-<h1>音声受付システム</h1>
+<h1 style="font-size:48px;">音声受付システム</h1>
 
 <div>
   <input id="nameInput" type="text" placeholder="名前を入力または音声入力">
@@ -36,7 +45,7 @@
 
 <script>
 // ====== 設定 ======
-const API_URL = "https://script.google.com/macros/s/AKfycbx4JFa8wL7E2KdTvLkwuotxRahR_kx5U6HlY0iHVMacuBbCjdKLxizV6OxMsqwFXgqahQ/exec";  // ← Apps Script の /exec URL を入れる
+const API_URL = "https://script.google.com/macros/s/AKfycbx4JFa8wL7E2KdTvLkwuotxRahR_kx5U6HlY0iHVMacuBbCjdKLxizV6OxMsqwFXgqahQ/exec";
 
 // ====== Kuroshiro 初期化 ======
 let kuroshiroReady = false;
@@ -49,29 +58,21 @@ window.addEventListener("load", async () => {
   console.log("Kuroshiro initialized");
 });
 
-// ====== 正規化（漢字 → ひらがな対応） ======
+// ====== 正規化（漢字 → ひらがな） ======
 async function normalizeHiragana(str) {
   if (!str) return "";
 
-  // 初期化待ち（最大 2 秒）
   let waitCount = 0;
   while (!kuroshiroReady && waitCount < 20) {
     await new Promise(resolve => setTimeout(resolve, 100));
     waitCount++;
   }
 
-  // 敬称・語尾削除
   str = str.replace(/です|さん|様/g, "");
-
-  // 記号削除
   str = str.replace(/[。、・]/g, "");
-
-  // 全角・半角スペース削除
   str = str.replace(/[\s　]+/g, "");
 
-  // ★ 漢字 → ひらがな変換
   str = await kuroshiro.convert(str, { to: "hiragana" });
-
   return str.trim();
 }
 
@@ -85,12 +86,10 @@ document.getElementById("micBtn").onclick = () => {
     text = await normalizeHiragana(text);
     document.getElementById("nameInput").value = text;
 
-    // ★ aborted 回避のため遅延実行
     setTimeout(() => searchName(text), 500);
   };
 
   recognition.onerror = (event) => {
-    console.log("SpeechRecognition error:", event.error);
     setStatus("×", "音声認識エラー：" + event.error);
   };
 
@@ -113,25 +112,35 @@ async function searchName(name) {
     const res = await fetch(`${API_URL}?name=${encodeURIComponent(name)}`);
     const data = await res.json();
 
+    // ★ 非会員（該当者なし）
     if (!data.results || data.results.length === 0) {
-      setStatus("×", "該当者が見つかりません");
+      setStatus("×", "非会員の場合、お支払いください");
+
+      setTimeout(() => {}, 6000);
       return;
     }
 
+    // ★ 複数候補
     if (data.results.length > 1) {
       setStatus("△", `候補が複数あります（${data.results.length}件）`);
+
+      setTimeout(() => {}, 6000);
       return;
     }
 
     const person = data.results[0];
 
-    // ★ 所属も表示
+    // ★ 会員（所属表示）
     setStatus("○", `${person.name} さん（${person.company}）を受付します`);
+
+    setTimeout(() => {}, 6000);
 
     await checkIn(person.id);
 
   } catch (e) {
     setStatus("×", "エラーが発生しました");
+
+    setTimeout(() => {}, 6000);
   }
 }
 
@@ -161,10 +170,3 @@ function log(message) {
 
 </body>
 </html>
-
-
-
-
-
-
-
