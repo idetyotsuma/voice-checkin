@@ -12,9 +12,14 @@
 </style>
 
 <!-- ★ 漢字 → ひらがな変換ライブラリ -->
-<script src="https://unpkg.com/kuroshiro/dist/kuroshiro.min.js"></script>
-<script src="https://unpkg.com/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+<!-- kuromoji.js（形態素解析器） -->
+<script src="https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js"></script>
 
+<!-- Kuroshiro 本体 -->
+<script src="https://unpkg.com/kuroshiro@1.1.0/dist/kuroshiro.min.js"></script>
+
+<!-- Kuroshiro 用の Kuromoji アナライザ -->
+<script src="https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 </head>
 <body>
 
@@ -156,6 +161,7 @@ function log(message) {
 
 </body>
 </html>
+
 
 
 
