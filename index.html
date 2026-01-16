@@ -172,23 +172,23 @@ async function searchName(name) {
     // ====== 所属判定（E列） ======
     const company = (person.company || "").trim();
 
-    // ★ 非会員（表記ゆれにも対応）
-    if (company.includes("非会員")) {
-      document.getElementById("status").textContent = "×";
-      document.getElementById("log").innerHTML =
-        `<div class="non-member-warning">
-           受付にて参加費をお支払いください
-         </div>`;
-      setTimeout(() => {}, 6000);
-      document.getElementById("nameInput").value = "";
-      return;
-    }
-
-    // ★ 会員（埼玉県自閉症協会会員）
+    // ★ ① 会員（先に判定する）
     if (company.includes("埼玉県自閉症協会会員")) {
       setStatus("○", `${person.name} さん（${company}）を受付します`);
       setTimeout(() => {}, 6000);
       await checkIn(person.id);
+      document.getElementById("nameInput").value = "";
+      return;
+    }
+
+    // ★ ② 非会員（次に判定）
+    else if (company.includes("非会員")) {
+      document.getElementById("status").textContent = "×";
+      document.getElementById("log").innerHTML =
+    `    <div class="non-member-warning">
+           受付にて参加費をお支払いください
+         </div>`;
+      setTimeout(() => {}, 6000);
       document.getElementById("nameInput").value = "";
       return;
     }
@@ -231,5 +231,6 @@ function log(message) {
 
 </body>
 </html>
+
 
 
