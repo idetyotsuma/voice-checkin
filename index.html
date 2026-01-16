@@ -156,6 +156,8 @@ async function searchName(name) {
       document.getElementById("log").innerHTML =
         `<div class="not-found">名簿にお名前がありません</div>`;
       setTimeout(() => {}, 6000);
+      document.getElementById("nameInput").value = "";  // ← 追加
+
       return;
     }
 
@@ -230,4 +232,5 @@ function log(message) {
 
 </body>
 </html>
+
 
