@@ -71,15 +71,7 @@ async function normalizeHiragana(str) {
 }
 
 // ====== 音声入力 ======
-document.getElementById("micBtn").onclick = async () => {
-
-  // ★ kuroshiro 初期化待ち（最大 2 秒）
-  let waitCount = 0;
-  while (!kuroshiroReady && waitCount < 20) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    waitCount++;
-  }
-
+document.getElementById("micBtn").onclick = () => {
   const recognition = new webkitSpeechRecognition();
   recognition.lang = "ja-JP";
 
@@ -87,10 +79,11 @@ document.getElementById("micBtn").onclick = async () => {
     let text = event.results[0][0].transcript;
     text = await normalizeHiragana(text);
     document.getElementById("nameInput").value = text;
-    searchName(text);
+
+    // ★ aborted 回避のため遅延実行
+    setTimeout(() => searchName(text), 500);
   };
 
-  // ★ エラー表示（原因がわかる）
   recognition.onerror = (event) => {
     console.log("SpeechRecognition error:", event.error);
     setStatus("×", "音声認識エラー：" + event.error);
@@ -98,7 +91,6 @@ document.getElementById("micBtn").onclick = async () => {
 
   recognition.start();
 };
-
 
 // ====== 検索ボタン ======
 document.getElementById("searchBtn").onclick = async () => {
@@ -164,5 +156,6 @@ function log(message) {
 
 </body>
 </html>
+
 
 
