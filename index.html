@@ -170,7 +170,9 @@ async function searchName(name) {
     const person = data.results[0];
 
     // ====== 所属判定（E列） ======
-    const company = (person.company || "").trim();
+    const company = (person.company || "")
+      .replace(/\s+/g, "")   // 全ての空白を除去
+      .trim();
 
     // ★ 非会員（表記ゆれにも対応）
     if (company.includes("非会員")) {
@@ -231,3 +233,4 @@ function log(message) {
 
 </body>
 </html>
+
