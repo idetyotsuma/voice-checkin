@@ -71,10 +71,17 @@ async function normalizeHiragana(str) {
 }
 
 // ====== 音声入力 ======
-document.getElementById("micBtn").onclick = () => {
+document.getElementById("micBtn").onclick = async () => {
+
+  // ★ kuroshiro 初期化待ち（最大 2 秒）
+  let waitCount = 0;
+  while (!kuroshiroReady && waitCount < 20) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    waitCount++;
+  }
+
   const recognition = new webkitSpeechRecognition();
   recognition.lang = "ja-JP";
-  recognition.start();
 
   recognition.onresult = async (event) => {
     let text = event.results[0][0].transcript;
@@ -82,7 +89,16 @@ document.getElementById("micBtn").onclick = () => {
     document.getElementById("nameInput").value = text;
     searchName(text);
   };
+
+  // ★ エラー表示（原因がわかる）
+  recognition.onerror = (event) => {
+    console.log("SpeechRecognition error:", event.error);
+    setStatus("×", "音声認識エラー：" + event.error);
+  };
+
+  recognition.start();
 };
+
 
 // ====== 検索ボタン ======
 document.getElementById("searchBtn").onclick = async () => {
@@ -148,3 +164,4 @@ function log(message) {
 
 </body>
 </html>
+
