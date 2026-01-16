@@ -156,8 +156,7 @@ async function searchName(name) {
       document.getElementById("log").innerHTML =
         `<div class="not-found">名簿にお名前がありません</div>`;
       setTimeout(() => {}, 6000);
-      document.getElementById("nameInput").value = "";  // ← 追加
-
+      document.getElementById("nameInput").value = "";
       return;
     }
 
@@ -171,10 +170,10 @@ async function searchName(name) {
     const person = data.results[0];
 
     // ====== 所属判定（E列） ======
-    const company = person.company ? person.company.trim() : "";
+    const company = (person.company || "").trim();
 
-    // ★ 非会員
-    if (company === "非会員（当日受付にて参加費をお支払いください）") {
+    // ★ 非会員（表記ゆれにも対応）
+    if (company.includes("非会員")) {
       document.getElementById("status").textContent = "×";
       document.getElementById("log").innerHTML =
         `<div class="non-member-warning">
@@ -186,7 +185,7 @@ async function searchName(name) {
     }
 
     // ★ 会員（埼玉県自閉症協会会員）
-    if (company === "埼玉県自閉症協会会員") {
+    if (company.includes("埼玉県自閉症協会会員")) {
       setStatus("○", `${person.name} さん（${company}）を受付します`);
       setTimeout(() => {}, 6000);
       await checkIn(person.id);
@@ -232,5 +231,3 @@ function log(message) {
 
 </body>
 </html>
-
-
