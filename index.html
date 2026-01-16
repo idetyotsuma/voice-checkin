@@ -44,7 +44,7 @@ let kuroshiro;
 
 window.addEventListener("load", async () => {
   kuroshiro = new Kuroshiro();
-  await kuroshiro.init(new KuromojiAnalyzer());
+  await kuroshiro.init(new KuromojiAnalyzer({ dictPath: "dict/" }));
   kuroshiroReady = true;
   console.log("Kuroshiro initialized");
 });
@@ -161,6 +161,7 @@ function log(message) {
 
 </body>
 </html>
+
 
 
 
