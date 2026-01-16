@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>音声受付システム（D列ひらがな対応）</title>
+<title>音声受付システム（完全版）</title>
 <style>
   body { font-family: sans-serif; margin: 40px; text-align: center; }
   #status { font-size: 80px; margin: 30px 0; }
@@ -10,6 +10,11 @@
   button { font-size: 20px; padding: 10px 20px; margin: 10px; }
   input { font-size: 20px; padding: 8px; width: 300px; }
 </style>
+
+<!-- ★ 漢字 → ひらがな変換ライブラリ -->
+<script src="https://unpkg.com/kuroshiro/dist/kuroshiro.min.js"></script>
+<script src="https://unpkg.com/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+
 </head>
 <body>
 
@@ -26,23 +31,27 @@
 
 <script>
 // ====== 設定 ======
-const API_URL = "https://script.google.com/macros/s/AKfycbxu4nEhw2QDiUMCGfFL53iNubqVEhAWDihsYZdFeI7kJyaibmNpHsce9g-MiSSDyMb21g/exec";  // ←差し替え必須
+const API_URL = "YOUR_SCRIPT_URL";  // ← Apps Script の /exec URL を入れる
 
-// ====== カタカナ→ひらがな変換 ======
-function toHiragana(str) {
-  return str.replace(/[\u30a1-\u30f6]/g, m =>
-    String.fromCharCode(m.charCodeAt(0) - 0x60)
-  );
-}
+// ====== Kuroshiro 初期化 ======
+let kuroshiro = new Kuroshiro();
+kuroshiro.init(new KuromojiAnalyzer());
 
-// ====== 音声入力の正規化 ======
-function normalizeHiragana(str) {
+// ====== 正規化（漢字 → ひらがな対応） ======
+async function normalizeHiragana(str) {
   if (!str) return "";
 
-  str = toHiragana(str);          // カタカナ→ひらがな
-  str = str.replace(/です|さん|様/g, ""); // 敬称削除
-  str = str.replace(/[\s　]+/g, ""); // 全角・半角スペース削除
-  str = str.replace(/[。、・]/g, ""); // 記号削除
+  // 敬称・語尾削除
+  str = str.replace(/です|さん|様/g, "");
+
+  // 記号削除
+  str = str.replace(/[。、・]/g, "");
+
+  // 全角・半角スペース削除
+  str = str.replace(/[\s　]+/g, "");
+
+  // ★ 漢字 → ひらがな変換
+  str = await kuroshiro.convert(str, { to: "hiragana" });
 
   return str.trim();
 }
@@ -53,17 +62,17 @@ document.getElementById("micBtn").onclick = () => {
   recognition.lang = "ja-JP";
   recognition.start();
 
-  recognition.onresult = (event) => {
+  recognition.onresult = async (event) => {
     let text = event.results[0][0].transcript;
-    text = normalizeHiragana(text);
+    text = await normalizeHiragana(text);
     document.getElementById("nameInput").value = text;
     searchName(text);
   };
 };
 
 // ====== 検索ボタン ======
-document.getElementById("searchBtn").onclick = () => {
-  const name = normalizeHiragana(document.getElementById("nameInput").value);
+document.getElementById("searchBtn").onclick = async () => {
+  const name = await normalizeHiragana(document.getElementById("nameInput").value);
   searchName(name);
 };
 
@@ -89,7 +98,7 @@ async function searchName(name) {
 
     const person = data.results[0];
 
-    // ★ 所属を含めて表示
+    // ★ 所属も表示
     setStatus("○", `${person.name} さん（${person.company}）を受付します`);
 
     await checkIn(person.id);
@@ -124,5 +133,4 @@ function log(message) {
 </script>
 
 </body>
-
 </html>
