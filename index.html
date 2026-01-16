@@ -5,22 +5,45 @@
 <title>音声受付システム（完全安定版）</title>
 
 <style>
-  body { font-family: sans-serif; margin: 40px; text-align: center; }
-
-  /* ★ 表示を大きくして視認性アップ */
-  #status { font-size: 100px; margin: 40px 0; }
-  #log { margin-top: 25px; font-size: 28px; color: #333; }
-
-  button {
-    font-size: 32px;
-    padding: 18px 30px;
-    margin: 15px;
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+    text-align: center;
   }
 
+  /* ★ ステータス（○ × △）をさらに大きく */
+  #status {
+    font-size: 120px;
+    margin: 40px 0;
+    font-weight: bold;
+  }
+
+  /* ★ 所属・メッセージを大きく太く */
+  #log {
+    margin-top: 30px;
+    font-size: 36px;
+    font-weight: bold;
+    color: #222;
+  }
+
+  /* ★ ボタンを大きく */
+  button {
+    font-size: 40px;
+    padding: 22px 40px;
+    margin: 20px;
+  }
+
+  /* ★ 入力欄も大きく */
   input {
-    font-size: 32px;
-    padding: 12px;
-    width: 420px;
+    font-size: 40px;
+    padding: 16px;
+    width: 500px;
+  }
+
+  /* タイトルも大きく */
+  h1 {
+    font-size: 60px;
+    margin-bottom: 40px;
   }
 </style>
 
@@ -32,7 +55,7 @@
 
 <body>
 
-<h1 style="font-size:48px;">音声受付システム</h1>
+<h1>音声受付システム</h1>
 
 <div>
   <input id="nameInput" type="text" placeholder="名前を入力または音声入力">
