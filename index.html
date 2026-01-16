@@ -40,7 +40,7 @@ function normalizeHiragana(str) {
   if (!str) return "";
 
   str = toHiragana(str);          // カタカナ→ひらがな
-  str = str.replace(/さん|様/g, ""); // 敬称削除
+  str = str.replace(/です|さん|様/g, ""); // 敬称削除
   str = str.replace(/[\s　]+/g, ""); // 全角・半角スペース削除
   str = str.replace(/[。、・]/g, ""); // 記号削除
 
@@ -124,4 +124,5 @@ function log(message) {
 </script>
 
 </body>
+
 </html>
